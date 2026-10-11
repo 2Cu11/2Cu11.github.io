@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人网页</title>
+    <style>
+        .box1{
+            position: relative;   /* 新增：让 .doors 以背景图左上角为定位基准 */
+            width: 1670px;
+            height: 1169px;
+            background-color:aqua;
+            background-image:
+                url('../ui/select4.png');
+                background-size:1670px 1169px;
+
+        }
+
+        /* 定位层：铺满背景图，四扇门按背景图中的坐标摆放 */
+        .doors {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1670px;
+            height: 1169px;
+         }
+        .door {
+           position: absolute;   /* 按背景图坐标定位 */
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           padding: 0;
+           border: 0;
+           background: none;
+           cursor: pointer;
+           font: inherit;
+           color: inherit;
+           -webkit-tap-highlight-color: transparent;
+         }
+
+         /* 四扇门在背景图中的位置/大小 */
+         .door[data-channel="trunk"] { left: 150px;  top: 340px;   width: AUTO;  height: 490px; }
+         .door[data-channel="aqua"]  { left: 443px;  top: 340px;   width: auto;  height: 490px; }
+         .door[data-channel="cons"]  { left: 740px;  top: 340px;   width: auto;  height: 490px; }
+         .door[data-channel="your"]  { left: 1250px; top: 320px;   width: auto;  height: 500px; }
+
+         /* 落地投影 */
+         .door__shadow {
+           position: absolute;
+           left: 50%;
+           bottom: 34px;
+           width: 92%;
+           height: 20px;
+           transform: translateX(-50%);
+           border-radius: 50%;
+           background: radial-gradient(closest-side, rgba(58, 42, 30, .40), rgba(58, 42, 30, 0) 78%);
+           filter: blur(3px);
+           transition: transform .32s cubic-bezier(.2, .8, .3, 1), opacity .32s ease;
+         }
+
+         .door__art {
+           display: block;
+           position: relative;
+           transform-origin: bottom center;
+            width: 100%;
+            height: 100%;
+           transition: transform .32s cubic-bezier(.2, .8, .3, 1), filter .32s ease;
+           filter: drop-shadow(0 6px 10px rgba(58, 42, 30, .18));
+           will-change: transform;
+         }
+
+         .door__label {
+           display: grid;
+           place-items: end center;
+           height: 30px;
+           margin-top: 10px;
+           font-family: 'Mamelon', 'MyricaM', serif;
+            font-size: 20px;
+           letter-spacing: .09em;
+           color: rgba(74, 59, 48, .78);
+           text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+           transition: color .28s ease, transform .28s ease;
+           white-space: nowrap;
+         }
+
+         /* 悬停 / 键盘聚焦：门轻微抬起、变亮，投影收窄 */
+         .door:hover .door__art,
+         .door:focus-visible .door__art {
+           transform: translateY(-14px) scale(1.02);
+           filter: brightness(1.08) saturate(1.04)
+          drop-shadow(0 20px 22px rgba(58, 42, 30, .26));
+         }
+
+         .door:hover .door__shadow,
+         .door:focus-visible .door__shadow {
+           transform: translateX(-50%) scale(.82);
+           opacity: .72;
+         }
+
+         .door:hover .door__label,
+         .door:focus-visible .door__label {
+           color: var(--ink);
+           transform: translateY(-2px);
+         }
+
+         .door:focus-visible {
+           outline: none;
+         }
+
+         .door:focus-visible .door__label {
+           text-decoration: underline;
+           text-decoration-color: var(--accent);
+           text-underline-offset: 5px;
+           text-decoration-thickness: 1.5px;
+         }
+
+         .door:active .door__art {
+           transform: translateY(-5px) scale(.995);
+         }
+
+        /* 悬停图片 */
+         .door__hover {
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 14px);     
+            transform: translateX(-50%) translateY(8px);
+            width: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;           
+            transition: opacity .3s ease, transform .3s cubic-bezier(.2, .8, .3, 1), visibility .3s;
+            z-index: 20;
+         }
+
+         /* 悬停时显示（仅控制显隐，transform 由各门的位置规则接管）*/
+         .door:hover .door__hover,
+         .door:focus-visible .door__hover {
+            opacity: 1;
+            visibility: visible;
+         }
+
+         .door__hover-img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 50px;
+            left: 100px;
+            bottom: 100px;
+         }
+
+         /* 悬停文字 */
+         .door__caption {
+            position: absolute;
+            width: 250px;
+            font-family: 'Mamelon', 'MyricaM', serif;
+            font-size: 50px;
+            line-height: 1.6;
+            letter-spacing: .04em;
+            color: rgba(74, 59, 48, .88);
+            text-align: center;
+            white-space: pre-line;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .3s ease, transform .3s cubic-bezier(.2, .8, .3, 1), visibility .3s;
+            transform: translateY(8px);
+            z-index: 30;
+            left: 280px; 
+            top: 80px;
+         }
+
+         /* 对应门悬停 / 聚焦时显示 */
+         .door[data-channel="trunk"]:hover ~ .door__caption[data-caption="trunk"],
+         .door[data-channel="trunk"]:focus-visible ~ .door__caption[data-caption="trunk"],
+         .door[data-channel="aqua"]:hover ~ .door__caption[data-caption="aqua"],
+         .door[data-channel="aqua"]:focus-visible ~ .door__caption[data-caption="aqua"],
+         .door[data-channel="cons"]:hover ~ .door__caption[data-caption="cons"],
+         .door[data-channel="cons"]:focus-visible ~ .door__caption[data-caption="cons"],
+         .door[data-channel="your"]:hover ~ .door__caption[data-caption="your"],
+         .door[data-channel="your"]:focus-visible ~ .door__caption[data-caption="your"] {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+         }
+
+         /* ===== 第四扇门：面板保持显示在门的上方 ===== */
+         .door[data-channel="your"]:hover .door__hover,
+         .door[data-channel="your"]:focus-visible .door__hover {
+            transform: translateX(-50%) translateY(0);
+         }
+         /* ===== 前三扇门：悬停面板居中显示在按钮内部 ===== */
+         .door[data-channel="trunk"] .door__hover,
+         .door[data-channel="aqua"] .door__hover,
+         .door[data-channel="cons"] .door__hover {
+            left: 50%;
+            top: 50%;
+            bottom: auto;
+            width: 88%;
+            transform: translate(-50%, -50%) scale(.96);
+         }
+
+         .door[data-channel="trunk"]:hover .door__hover,
+         .door[data-channel="aqua"]:hover .door__hover,
+         .door[data-channel="cons"]:hover .door__hover,
+         .door[data-channel="trunk"]:focus-visible .door__hover,
+         .door[data-channel="aqua"]:focus-visible .door__hover,
+         .door[data-channel="cons"]:focus-visible .door__hover {
+            transform: translate(-50%, -50%) scale(1);
+         }
+
+         /* ===== 第四扇门悬停时，同时触发前三扇门的悬停效果 ===== */
+         /* 需要支持 :has() 的浏览器（Chrome/Edge 105+、Safari 15.4+、Firefox 121+）*/
+         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="trunk"] .door__hover,
+         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="aqua"] .door__hover,
+         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="cons"] .door__hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+         }
+
+         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="trunk"] .door__art,
+         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="aqua"] .door__art,
+         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="cons"] .door__art {
+            transform: translateY(-14px) scale(1.02);
+            filter: brightness(1.08) saturate(1.04)
+           drop-shadow(0 20px 22px rgba(58, 42, 30, .26));
+         }
+
+         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="trunk"] .door__shadow,
+         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="aqua"] .door__shadow,
+         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="cons"] .door__shadow {
+            transform: translateX(-50%) scale(.82);
+            opacity: .72;
+         }
+         #声明{
+            position: absolute;
+            color: rgb(3, 253, 253);
+            bottom: 10px;
+            left: 1000px;
+            font-style: oblique ;
+            
+         }
+
+    </style>
+</head>
+<body>
+    <header class="Cu"></header>
+    <div class="box1">
+        <nav class="doors" id="doors" aria-label="频道选择">
+             <button class="door" type="button" data-channel="trunk"
+                     aria-label="进入 TrunkRoom">
+                <span class="door__shadow" aria-hidden="true"></span>
+                <img class="door__art" src="./ui/door_trunk.png" alt="" draggable="false">
+                <span class="door__label">TrunkRoom</span>
+                 <span class="door__hover">
+                    <img class="door__hover-img" src="./ui/ico_nezumi.png" alt="" draggable="false">
+                 </span>
+             </button>
+
+              <button class="door" type="button" data-channel="aqua"
+                      aria-label="进入 AQUARIUM">
+                <span class="door__shadow" aria-hidden="true"></span>
+                <img class="door__art" src="./ui/door_aqua.png" alt="" draggable="false">
+                <span class="door__label">AQUARIUM</span>
+                 <span class="door__hover">
+                    <img class="door__hover-img" src="./ui/ico_sakana.png" alt="" draggable="false">
+                 </span>
+              </button>
+
+              <button class="door" type="button" data-channel="cons"
+                      aria-label="进入 Consolation">
+                <span class="door__shadow" aria-hidden="true"></span>
+                <img class="door__art" src="./ui/door_cons.png" alt="" draggable="false">
+                <span class="door__label">Consolation</span>
+                 <span class="door__hover">
+                    <img class="door__hover-img" src="./ui/ico_acrsai.png" alt="" draggable="false">
+                 </span>
+              </button>
+
+              <button id="ID" class="door" type="button" data-channel="your"
+                      aria-label="进入 YourRoom ">
+                <span class="door__shadow" aria-hidden="true"></span>
+                <img class="door__art" src="./ui/door_your.png" alt="" draggable="false">
+                <span class="door__label">YourRoom</span>
+                 <span class="door__hover">
+                    <img class="door__hover-img" src="./ui/hover_your.png" alt="" draggable="false">
+                 </span>
+              </button>
+
+
+       <!-- 悬停文字 -->
+        <span class="door__caption" data-caption="trunk">个人日记</span>
+        <span class="door__caption" data-caption="aqua">项目展示</span>
+        <span class="door__caption" data-caption="cons">联系方式</span>
+        <span class="door__caption" data-caption="your">个人简介</span>
+
+    </nav>
+    <span id="声明">页面素材来自游戏“For the GHOSTs“</span>
+    </div>
+    
+</body>
+</html>

@@ -1,20 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>个人网页</title>
     <style>
+         html, body{
+            margin:0;
+            height:100%;
+            overflow:auto;
+            background-color: pink;
+            /* scroll-behavior: smooth; */
+         }
         .box1{
-            position: relative;   /* 新增：让 .doors 以背景图左上角为定位基准 */
+
+            display:flex;
+            position: fixed; 
+            left:0;
+            top:0;
             width: 1670px;
             height: 1169px;
+            transform-origin: top left;
+            visibility: hidden;
             background-color:aqua;
             background-image:
-                url('../ui/select4.png');
-                background-size:1670px 1169px;
+                url('./ui/select4.png');
+                background-size:100% 100%;
+            z-index: 1;
+            will-change: transform;
+      }
+        .box2 {
+         position: absolute;
+         left: 0;
+         top: 0;
+         width: 1670px;              /* 与脚本里的 W 保持一致 */
+         height: 4000px;             /* 与脚本里的 H2 保持一致 */
+         transform-origin: top left;
+         visibility: hidden;         
+         overflow: hidden;
+         z-index: 2;                 /* 盖在 box1 上面 */
+         background: #c1d4e8;        /* 必须不透明，否则会透出 box1 */
+}
 
-        }
+.b2-layer { position: absolute; will-change: transform; }
+
+/* 慢速背景层：做得比 box2 高，移动时才不会露边 */
+.b2-back {
+    left: 0;
+    top: -900px;
+    width: 100%;
+    height: 2969px;
+    background: repeating-linear-gradient(
+        180deg, rgba(255,255,255,.06) 0 80px, transparent 80px 160px);
+    /* 换成自己的图：background: url('./ui/xxx.png') center / cover; */
+}
+
+/* 前景层：移动比滚动更快 */
+.b2-front {
+    left: 200px;
+    top: 450px;
+    color: #fff;
+    font-size: 80px;
+}
 
         /* 定位层：铺满背景图，四扇门按背景图中的坐标摆放 */
         .doors {
@@ -246,9 +293,119 @@
          }
 
     </style>
-</head>
+   <script>
+document.addEventListener('DOMContentLoaded', function () {
+    /* ===== 可调参数 ===== */
+    const W = 1670, H = 1169;   // 舞台尺寸
+    const INIT = 1;             // 初始大小系数
+    const SPEED1 = 0.5;         // box1 视差速度：0.5 = 以一半速度上移
+    const SMOOTH = 1.0;         // 目标：每次滚动约在 1 秒内平滑完成
+    // 由 SMOOTH 反推每 60fps 帧的缓动系数，使约 1 秒后剩余 ~2%（即基本到位）
+    let EASE = 1 - Math.pow(0.02, 1 / (SMOOTH * 60));   // ≈0.063，越小越柔
+
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) EASE = 1;
+
+    const baseDpr = window.devicePixelRatio;
+    const box1 = document.querySelector('.box1');
+    const box2 = document.querySelector('.box2');
+    if (!box1) { console.error('找不到 .box1'); return; }
+    if (!box2) console.warn('找不到 .box2，目前只处理 box1');
+
+    const layers = box2 ? Array.from(box2.querySelectorAll('[data-speed]')) : [];
+    let s = 1, left = 0, top1 = 0, top2 = 0;
+    let current = window.scrollY;
+    let running = false;
+    let last = 0;               // 上一帧时间戳，用于帧率无关缓动
+    let refFrom = 0;            // 本次平滑滚动的起始动画位置
+    let gap = 0;                // 本次要移动的总距离（用于相对停止阈值）
+
+    function layout() {
+        const vw = document.documentElement.clientWidth;
+        const vh = document.documentElement.clientHeight;
+        const zoom = window.devicePixelRatio / baseDpr;
+
+        s = Math.floor(Math.min(vw / W, vh / H) * INIT * zoom * 1000) / 1000;
+        left = Math.max(0, (vw - W * s) / 2);
+        top1 = Math.max(0, (vh - H * s) / 2);
+        top2 = Math.max(vh, top1 + H * s);   // box2 在文档中的起始位置
+
+        // fixed 元素不占文档高度，用 body 高度撑出可滚动范围
+        document.body.style.height = (box2 ? top2 + H * s : vh + 1) + 'px';
+
+        box1.style.visibility = 'visible';
+        if (box2) box2.style.visibility = 'visible';
+        snap();
+    }
+
+    function render(y) {
+        const vh = document.documentElement.clientHeight;
+
+        // box1：向上移动 y * SPEED1（慢于滚动）
+        box1.style.transform =
+            'translate3d(' + left + 'px,' + (top1 - y * SPEED1) + 'px,0) scale(' + s + ')';
+
+        if (box2) {
+            // box2：以正常速度从下方上来
+            box2.style.transform =
+                'translate3d(' + left + 'px,' + (top2 - y) + 'px,0) scale(' + s + ')';
+
+            // box2 内部各层的视差
+            const p = y + vh - top2;
+            layers.forEach(function (el) {
+                const k = parseFloat(el.dataset.speed) || 0;
+                el.style.transform = 'translate3d(0,' + (p * k / s) + 'px,0)';
+            });
+        }
+    }
+
+    function loop(now) {
+        const target = window.scrollY;
+
+        // 帧率无关缓动：以 60fps 为基准换算，保证高刷屏同样顺滑
+        const dt = last ? Math.min(now - last, 100) : (1000 / 60); // 限制掉帧/切后台后的突跳
+        last = now;
+        const k = 1 - Math.pow(1 - EASE, dt / (1000 / 60));
+        current += (target - current) * k;
+
+        // 相对停止阈值：剩余距离小于“本次移动量”的 2%（至少 0.5px），
+        // 这样无论一次滚动多少像素，都能在约 SMOOTH 秒内平滑收敛，不会拖尾
+        const threshold = Math.max(0.5, gap * 0.02);
+        if (Math.abs(target - current) < threshold) {
+            current = target;
+            last = 0;
+            running = false;
+        } else {
+            requestAnimationFrame(loop);
+        }
+        render(current);
+    }
+
+    function kick() {
+        const t = window.scrollY;
+        if (!running) {
+            running = true;
+            last = 0;
+            refFrom = current;                 // 从当前动画位置开始计量
+            gap = Math.abs(t - current);       // 本次要移动的总距离
+            requestAnimationFrame(loop);
+        } else {
+            // 动画进行中又来新滚动：累计总距离，保证停止阈值始终合理
+            gap = Math.max(gap, Math.abs(t - refFrom));
+        }
+    }
+
+    function snap() {
+        current = window.scrollY;
+        render(current);
+    }
+
+    addEventListener('scroll', kick, { passive: true });
+    addEventListener('resize', layout);   // Ctrl+滚轮缩放也会触发
+    addEventListener('load', layout);
+    layout();
+});
+</script>
 <body>
-    <header class="Cu"></header>
     <div class="box1">
         <nav class="doors" id="doors" aria-label="频道选择">
              <button class="door" type="button" data-channel="trunk"
@@ -301,6 +458,13 @@
     </nav>
     <span id="声明">页面素材来自游戏“For the GHOSTs“</span>
     </div>
+    <div class="box2">
+      <div class="b2-layer b2-back" data-speed="0.3"></div>
+      <div class="b2-layer b2-front" data-speed="-0.15">个人简介
+         <div></div>
+      </div>
+      <br><br>
+   </div>
     
 </body>
 </html>

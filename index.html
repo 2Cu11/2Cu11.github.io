@@ -10,7 +10,7 @@
             height:100%;
             overflow:auto;
             background-color: pink;
-            /* scroll-behavior: smooth; */
+            scroll-behavior: smooth;
          }
         .box1{
 
@@ -299,11 +299,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const W = 1670, H = 1169;   // 舞台尺寸
     const INIT = 1;             // 初始大小系数
     const SPEED1 = 0.5;         // box1 视差速度：0.5 = 以一半速度上移
-    const SMOOTH = 1.0;         // 目标：每次滚动约在 1 秒内平滑完成
+    const SMOOTH = 0.5;         // 目标：每次滚动约在 1 秒内平滑完成
     // 由 SMOOTH 反推每 60fps 帧的缓动系数，使约 1 秒后剩余 ~2%（即基本到位）
     let EASE = 1 - Math.pow(0.02, 1 / (SMOOTH * 60));   // ≈0.063，越小越柔
 
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) EASE = 1;
+
+    /* ===== 点击 #ID（YourRoom）门时的下滑动画：下滑至 box2 顶部与浏览器顶部距离为 0 ===== */
+    const AUTO_MS = 500;       // 动画时长(ms)：500 = 0.5 秒，可自行调整
 
     const baseDpr = window.devicePixelRatio;
     const box1 = document.querySelector('.box1');
@@ -319,6 +322,16 @@ document.addEventListener('DOMContentLoaded', function () {
     let refFrom = 0;            // 本次平滑滚动的起始动画位置
     let gap = 0;                // 本次要移动的总距离（用于相对停止阈值）
 
+    /* ===== 点击 #ID（YourRoom）门的下滑动画状态（落点 = box2 顶部对齐浏览器顶部） ===== */
+    let autoScroll = false;            // 程序化滚动进行中
+    let autoStart = 0, autoFrom = 0;   // 起始时间戳 / 起始位置
+    let autoTo = 0;                    // 本次要滑到的目标滚动位置（点击时计算）
+    let prevScrollBehavior = '';       // 用于临时关闭/恢复 CSS 的 scroll-behavior
+
+    function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
     function layout() {
         const vw = document.documentElement.clientWidth;
         const vh = document.documentElement.clientHeight;
@@ -326,8 +339,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         s = Math.floor(Math.min(vw / W, vh / H) * INIT * zoom * 1000) / 1000;
         left = Math.max(0, (vw - W * s) / 2);
-        top1 = Math.max(0, (vh - H * s) / 2);
-        top2 = Math.max(vh, top1 + H * s);   // box2 在文档中的起始位置
+        top1 = 0;                            // box1 顶部始终贴住浏览器顶部（任意缩放都无间距）
+        top2 = top1 + H * s;                 // box2 顶部始终贴住 box1 底部（任意缩放都无间距）
 
         // fixed 元素不占文档高度，用 body 高度撑出可滚动范围
         document.body.style.height = (box2 ? top2 + H * s : vh + 1) + 'px';
@@ -359,6 +372,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function loop(now) {
+        if (autoScroll) return;             // 程序化滚动接管期间，不再跑普通缓动
         const target = window.scrollY;
 
         // 帧率无关缓动：以 60fps 为基准换算，保证高刷屏同样顺滑
@@ -381,6 +395,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function kick() {
+        if (autoScroll) return;             // 程序化滚动期间，忽略由它自身触发的手动滚动逻辑
         const t = window.scrollY;
         if (!running) {
             running = true;
@@ -399,47 +414,115 @@ document.addEventListener('DOMContentLoaded', function () {
         render(current);
     }
 
+    /* ===== 程序化滚动：下滑到 box2 顶部贴住浏览器顶部，时长 AUTO_MS，ease 缓动 ===== */
+    function maxScrollY() {
+        return Math.max(0,
+            document.documentElement.scrollHeight - document.documentElement.clientHeight);
+    }
+    // 想确认本页最多能滑多远（≈一屏高），取消下一行注释看控制台即可
+    // console.log('maxScrollY =', maxScrollY());
+
+    // 目标落点：box2 在视口中的位置 = top2 - 2 * 滚动值（它是绝对定位，同时又被 -滚动值 平移）
+    // 令该式为 0（box2 顶部贴住浏览器顶部）→ 滚动值 = top2 / 2，随缩放自适应
+    function autoTargetY() {
+        return top2 / 2;
+    }
+
+    function autoLoop(now) {
+        const t = Math.min(1, (now - autoStart) / AUTO_MS);
+        // 逐帧写入真实滚动位置，同时把同一数值交给 render，保证滚动条与视差完全同步
+        current = Math.min(autoFrom + easeInOutCubic(t) * (autoTo - autoFrom), maxScrollY());
+        window.scrollTo(0, current);        // 期间 CSS scroll-behavior 已临时置为 auto，故为瞬时定位
+        render(current);
+
+        if (t < 1) {
+            requestAnimationFrame(autoLoop);
+        } else {
+            // 收尾：停在精确落点，并把控制权交还给普通缓动
+            autoScroll = false;
+            running = false;
+            last = 0;
+            document.documentElement.style.scrollBehavior = prevScrollBehavior;
+            document.body.style.scrollBehavior = prevScrollBehavior;
+            render(current);
+        }
+    }
+
+    function startAutoScroll() {
+        if (autoScroll) return;             // 动画进行中，忽略重复点击
+        autoScroll = true;
+        running = false;                    // 停掉普通缓动循环
+        last = 0;
+        // 临时关闭 CSS 的 scroll-behavior:smooth，否则每帧 scrollTo 会被浏览器再次平滑化导致抖动
+        prevScrollBehavior = document.documentElement.style.scrollBehavior;
+        document.documentElement.style.scrollBehavior = 'auto';
+        document.body.style.scrollBehavior = 'auto';
+        autoFrom = current;                 // 从当前动画位置起步，衔接顺滑
+        autoTo = autoTargetY();             // 落点：box2 顶部与浏览器顶部距离为 0
+        autoStart = performance.now();
+        requestAnimationFrame(autoLoop);
+    }
+
+    function stopAutoScroll() {
+        if (!autoScroll) return;
+        autoScroll = false;
+        running = false;
+        last = 0;
+        document.documentElement.style.scrollBehavior = prevScrollBehavior;
+        document.body.style.scrollBehavior = prevScrollBehavior;
+    }
+
     addEventListener('scroll', kick, { passive: true });
     addEventListener('resize', layout);   // Ctrl+滚轮缩放也会触发
     addEventListener('load', layout);
+
+    /* 点击 YourRoom 门（#ID）：向下 ease 滑动 1800px */
+    const idDoor = document.getElementById('ID');
+    if (idDoor) {
+        idDoor.addEventListener('click', function (e) {
+            e.preventDefault();
+            startAutoScroll();
+        });
+    }
+
+    /* 动画期间用户一滚轮就立刻打断，交回手动滚动接管 */
+    addEventListener('wheel', stopAutoScroll, { passive: true });
+    addEventListener('touchstart', stopAutoScroll, { passive: true });
+
     layout();
 });
 </script>
 <body>
     <div class="box1">
         <nav class="doors" id="doors" aria-label="频道选择">
-             <button class="door" type="button" data-channel="trunk"
-                     aria-label="进入 TrunkRoom">
+             <a class="door"  href="/TrunkRoom.html" e="button" data-channel="trunk">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_trunk.png" alt="" draggable="false">
                 <span class="door__label">TrunkRoom</span>
                  <span class="door__hover">
                     <img class="door__hover-img" src="./ui/ico_nezumi.png" alt="" draggable="false">
                  </span>
-             </button>
+             </a>
 
-              <button class="door" type="button" data-channel="aqua"
-                      aria-label="进入 AQUARIUM">
+              <a class="door" href="/AQUARIUM.html" type="button" data-channel="aqua">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_aqua.png" alt="" draggable="false">
                 <span class="door__label">AQUARIUM</span>
                  <span class="door__hover">
                     <img class="door__hover-img" src="./ui/ico_sakana.png" alt="" draggable="false">
                  </span>
-              </button>
+              </a>
 
-              <button class="door" type="button" data-channel="cons"
-                      aria-label="进入 Consolation">
+              <a class="door" href="/Consolation.html" type="button" data-channel="cons">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_cons.png" alt="" draggable="false">
                 <span class="door__label">Consolation</span>
                  <span class="door__hover">
                     <img class="door__hover-img" src="./ui/ico_acrsai.png" alt="" draggable="false">
                  </span>
-              </button>
+              </a>
 
-              <button id="ID" class="door" type="button" data-channel="your"
-                      aria-label="进入 YourRoom ">
+              <button id="ID" class="door" type="button" data-channel="your">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_your.png" alt="" draggable="false">
                 <span class="door__label">YourRoom</span>
@@ -448,9 +531,9 @@ document.addEventListener('DOMContentLoaded', function () {
                  </span>
               </button>
 
-
-       <!-- 悬停文字 -->
-        <span class="door__caption" data-caption="trunk">个人日记</span>
+ 
+       <!-- <! 悬停文字  -->
+        <span class="door__caption" data-caption="trunk">日常日记</span>
         <span class="door__caption" data-caption="aqua">项目展示</span>
         <span class="door__caption" data-caption="cons">联系方式</span>
         <span class="door__caption" data-caption="your">个人简介</span>
@@ -460,10 +543,9 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
     <div class="box2">
       <div class="b2-layer b2-back" data-speed="0.3"></div>
-      <div class="b2-layer b2-front" data-speed="-0.15">个人简介
-         <div></div>
+      <div class="b2-layer b2-front" data-speed="-0.15">
+         <div>个人简介</div>
       </div>
-      <br><br>
    </div>
     
 </body>

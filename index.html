@@ -6,14 +6,40 @@
     <title>个人网页</title>
     <style>
          html, body{
+            border-radius: 90px;
             margin:0;
             height:100%;
             overflow:auto;
             background-color: pink;
             scroll-behavior: smooth;
          }
+        .content{
+            position: relative;     
+            /* background-color: aquamarine; */
+          
+        }
+        #title{
+            width: 350px;
+            border-radius: 30px;
+            position: relative;
+            background-color: aquamarine;
+            font-family: kaiti;
+            padding: 40px;
+            top: -270px;
+            left: 450px;
+            
+        }
+         .name{
+           background-color: #fc1707;
+            position: relative;
+            height: 250px;
+            width:0px ;
+            top: -200px;
+            left: -150px;
+            background-size: 100% 100%;
+        } 
         .box1{
-
+            border-radius: 90px;
             display:flex;
             position: fixed; 
             left:0;
@@ -28,40 +54,42 @@
                 background-size:100% 100%;
             z-index: 1;
             will-change: transform;
-      }
+        }
         .box2 {
-         position: absolute;
-         left: 0;
-         top: 0;
-         width: 1670px;              /* 与脚本里的 W 保持一致 */
-         height: 4000px;             /* 与脚本里的 H2 保持一致 */
-         transform-origin: top left;
-         visibility: hidden;         
-         overflow: hidden;
-         z-index: 2;                 /* 盖在 box1 上面 */
-         background: #c1d4e8;        /* 必须不透明，否则会透出 box1 */
-}
+            border-radius: 90px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1670px;              /* 与脚本里的 W 保持一致 */
+            height: 4000px;             /* 与脚本里的 H2 保持一致 */
+            transform-origin: top left;
+            visibility: hidden;         
+            overflow: hidden;
+            z-index: 2;                 /* 盖在 box1 上面 */
+            background: #c1d4e8;        /* 必须不透明，否则会透出 box1 */
+        }
 
-.b2-layer { position: absolute; will-change: transform; }
+        .b2-layer { position: absolute; will-change: transform; }
 
-/* 慢速背景层：做得比 box2 高，移动时才不会露边 */
-.b2-back {
-    left: 0;
-    top: -900px;
-    width: 100%;
-    height: 2969px;
-    background: repeating-linear-gradient(
-        180deg, rgba(255,255,255,.06) 0 80px, transparent 80px 160px);
-    /* 换成自己的图：background: url('./ui/xxx.png') center / cover; */
-}
+        /* 慢速背景层：做得比 box2 高，移动时才不会露边 */
+        .b2-back {
+            left: 0;
+            top: -900px;
+            width: 100%;
+            height: 2969px;
+            background: repeating-linear-gradient(
+                180deg, rgba(255,255,255,.06) 0 80px, transparent 80px 160px);
+        /* 换成自己的图：background: url('./ui/xxx.png') center / cover; */
+        }
 
-/* 前景层：移动比滚动更快 */
-.b2-front {
-    left: 200px;
-    top: 450px;
-    color: #fff;
-    font-size: 80px;
-}
+        /* 前景层：移动比滚动更快 */
+        .b2-front {
+            left: 200px;
+            top: 450px;
+            color: #fff;
+            font-size: 80px;
+        }
+
 
         /* 定位层：铺满背景图，四扇门按背景图中的坐标摆放 */
         .doors {
@@ -294,14 +322,15 @@
 
     </style>
    <script>
-document.addEventListener('DOMContentLoaded', function () {
-    /* ===== 可调参数 ===== */
-    const W = 1670, H = 1169;   // 舞台尺寸
-    const INIT = 1;             // 初始大小系数
-    const SPEED1 = 0.5;         // box1 视差速度：0.5 = 以一半速度上移
-    const SMOOTH = 0.5;         // 目标：每次滚动约在 1 秒内平滑完成
-    // 由 SMOOTH 反推每 60fps 帧的缓动系数，使约 1 秒后剩余 ~2%（即基本到位）
-    let EASE = 1 - Math.pow(0.02, 1 / (SMOOTH * 60));   // ≈0.063，越小越柔
+
+    document.addEventListener('DOMContentLoaded', function () {
+        /* ===== 可调参数 ===== */
+        const W = 1670, H = 1169;   // 舞台尺寸
+        const INIT = 1;             // 初始大小系数
+        const SPEED1 = 0.5;         // box1 视差速度：0.5 = 以一半速度上移
+        const SMOOTH = 0.5;         // 目标：每次滚动约在 1 秒内平滑完成
+        // 由 SMOOTH 反推每 60fps 帧的缓动系数，使约 1 秒后剩余 ~2%（即基本到位）
+        let EASE = 1 - Math.pow(0.02, 1 / (SMOOTH * 60));   // ≈0.063，越小越柔
 
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) EASE = 1;
 
@@ -498,7 +527,6 @@ document.addEventListener('DOMContentLoaded', function () {
              <a class="door"  href="/TrunkRoom.html" e="button" data-channel="trunk">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_trunk.png" alt="" draggable="false">
-                <span class="door__label">TrunkRoom</span>
                  <span class="door__hover">
                     <img class="door__hover-img" src="./ui/ico_nezumi.png" alt="" draggable="false">
                  </span>
@@ -507,7 +535,6 @@ document.addEventListener('DOMContentLoaded', function () {
               <a class="door" href="/AQUARIUM.html" type="button" data-channel="aqua">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_aqua.png" alt="" draggable="false">
-                <span class="door__label">AQUARIUM</span>
                  <span class="door__hover">
                     <img class="door__hover-img" src="./ui/ico_sakana.png" alt="" draggable="false">
                  </span>
@@ -516,7 +543,6 @@ document.addEventListener('DOMContentLoaded', function () {
               <a class="door" href="/Consolation.html" type="button" data-channel="cons">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_cons.png" alt="" draggable="false">
-                <span class="door__label">Consolation</span>
                  <span class="door__hover">
                     <img class="door__hover-img" src="./ui/ico_acrsai.png" alt="" draggable="false">
                  </span>
@@ -525,7 +551,6 @@ document.addEventListener('DOMContentLoaded', function () {
               <button id="ID" class="door" type="button" data-channel="your">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_your.png" alt="" draggable="false">
-                <span class="door__label">YourRoom</span>
                  <span class="door__hover">
                     <img class="door__hover-img" src="./ui/hover_your.png" alt="" draggable="false">
                  </span>
@@ -544,7 +569,16 @@ document.addEventListener('DOMContentLoaded', function () {
     <div class="box2">
       <div class="b2-layer b2-back" data-speed="0.3"></div>
       <div class="b2-layer b2-front" data-speed="-0.15">
-         <div>个人简介</div>
+         <div class="content">
+            <div id="title">个人简介</div>
+            <div  class="name" style="border-radius:50px; width: 1000px;height: 1000px;background-color: #fafbfc;">
+                <span style="width:100px;height: 100px;">
+                    <img class="name" src="./ui/头像1.png" style="border-radius: 30px; top: 100px; left: 10px; width: 250px;height: 250px;"><br>
+                    <p class="name" style="color: black;top: 2px;left: 50px;">2Cu</p>
+                </span>
+
+            </div>
+         </div>
       </div>
    </div>
     

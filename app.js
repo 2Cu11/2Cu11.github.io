@@ -334,8 +334,6 @@ document.addEventListener('DOMContentLoaded', function () {
             for (const p of starParticles) {
                 const prevX = p.x;
                 p.x += p.vx; p.y += p.vy;
-                // 横向：右移穿过 box1/box2 左边框往右 12px → 出现在右边框往左 11px；左移反之
-                //（按“本帧是否跨过界线”触发，避免传送后原地反复触发）
                 if (p.vx > 0 && prevX < bl + 12 && p.x >= bl + 12) p.x = br - 11;
                 else if (p.vx < 0 && prevX > br - 12 && p.x <= br - 12) p.x = bl + 11;
                 // 出视口边缘则从另一侧回来（含模糊余量）

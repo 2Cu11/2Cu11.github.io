@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (starsCanvas) {
         const sctx = starsCanvas.getContext('2d');
         const sdpr = Math.min(window.devicePixelRatio || 1, 2);
-        const STAR_COUNT = 80;                 // 星点数量
+        const STAR_COUNT = 40;                 // 星点数量
         let starParticles = [];
         let scw = 0, sch = 0;
 

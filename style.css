@@ -513,6 +513,56 @@ html, body{
     width: 100%;
     height: 100%;
     pointer-events: none;
-    filter: blur(4px);       /* 高斯模糊 */
-    z-index: 1;           
+    filter: blur(2px);       /* 高斯模糊 */
+    z-index: 1;
  }
+ #stars span{
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    background: #fff;
+    will-change: transform, opacity;
+ }
+
+ /* ===== 20 颗星点：各自固定轨迹，靠不同位置/大小/时长/延迟形成伪随机 ===== */
+ #stars span:nth-child(1)  { left:  3%; top: 14%; width: 16px; height: 16px; animation: star1  16.9s ease-in-out  -4s infinite; }
+ #stars span:nth-child(2)  { left:  8%; top: 62%; width:  8px; height:  8px; animation: star2  21.9s ease-in-out -19s infinite; }
+ #stars span:nth-child(3)  { left:  6%; top: 88%; width: 12px; height: 12px; animation: star3  14.4s ease-in-out  -9s infinite; }
+ #stars span:nth-child(4)  { left: 12%; top: 38%; width: 20px; height: 20px; animation: star4  25.6s ease-in-out -27s infinite; }
+ #stars span:nth-child(5)  { left: 22%; top:  6%; width:  7px; height:  7px; animation: star5  18.1s ease-in-out -13s infinite; }
+ #stars span:nth-child(6)  { left: 31%; top: 90%; width: 13px; height: 13px; animation: star6  23.8s ease-in-out  -6s infinite; }
+ #stars span:nth-child(7)  { left: 38%; top: 18%; width:  9px; height:  9px; animation: star7  15.6s ease-in-out -22s infinite; }
+ #stars span:nth-child(8)  { left: 47%; top: 74%; width: 18px; height: 18px; animation: star8  27.5s ease-in-out -11s infinite; }
+ #stars span:nth-child(9)  { left: 52%; top:  8%; width: 10px; height: 10px; animation: star9  19.4s ease-in-out -17s infinite; }
+ #stars span:nth-child(10) { left: 58%; top: 46%; width:  6px; height:  6px; animation: star10 13.8s ease-in-out  -3s infinite; }
+ #stars span:nth-child(11) { left: 63%; top: 84%; width: 15px; height: 15px; animation: star11 23.1s ease-in-out -25s infinite; }
+ #stars span:nth-child(12) { left: 69%; top: 12%; width:  8px; height:  8px; animation: star12 17.5s ease-in-out  -8s infinite; }
+ #stars span:nth-child(13) { left: 74%; top: 58%; width: 19px; height: 19px; animation: star13 26.9s ease-in-out -31s infinite; }
+ #stars span:nth-child(14) { left: 81%; top: 26%; width: 11px; height: 11px; animation: star14 16.3s ease-in-out -14s infinite; }
+ #stars span:nth-child(15) { left: 85%; top: 78%; width:  7px; height:  7px; animation: star15 20.6s ease-in-out  -5s infinite; }
+ #stars span:nth-child(16) { left: 90%; top:  9%; width: 14px; height: 14px; animation: star16 24.4s ease-in-out -21s infinite; }
+ #stars span:nth-child(17) { left: 94%; top: 47%; width:  9px; height:  9px; animation: star17 15.0s ease-in-out -16s infinite; }
+ #stars span:nth-child(18) { left: 96%; top: 87%; width: 17px; height: 17px; animation: star18 26.3s ease-in-out -29s infinite; }
+ #stars span:nth-child(19) { left: 16%; top: 52%; width:  6px; height:  6px; animation: star19 13.1s ease-in-out  -7s infinite; }
+ #stars span:nth-child(20) { left: 44%; top: 33%; width: 12px; height: 12px; animation: star20 22.5s ease-in-out -18s infinite; }
+
+ @keyframes star1  { 0%,100% { transform: translate(0,0);        opacity: .15 } 50%      { transform: translate(38px,-26px);  opacity: .95 } }
+ @keyframes star2  { 0%,100% { transform: translate(0,0);        opacity: .8  } 50%      { transform: translate(-22px,30px);  opacity: .2  } }
+ @keyframes star3  { 0%,100% { transform: translate(0,0);        opacity: .3  } 33%      { transform: translate(26px,18px);   opacity: 1   } 66% { transform: translate(-14px,34px); opacity: .5 } }
+ @keyframes star4  { 0%,100% { transform: translate(0,0);        opacity: .9  } 50%      { transform: translate(30px,42px);   opacity: .25 } }
+ @keyframes star5  { 0%,100% { transform: translate(0,0);        opacity: .2  } 50%      { transform: translate(-30px,22px);  opacity: .85 } }
+ @keyframes star6  { 0%,100% { transform: translate(0,0);        opacity: .7  } 33%      { transform: translate(-36px,-20px); opacity: .15 } 66% { transform: translate(20px,-38px); opacity: .9 } }
+ @keyframes star7  { 0%,100% { transform: translate(0,0);        opacity: .25 } 50%      { transform: translate(44px,14px);   opacity: .8  } }
+ @keyframes star8  { 0%,100% { transform: translate(0,0);        opacity: .85 } 50%      { transform: translate(-18px,-44px); opacity: .2  } }
+ @keyframes star9  { 0%,100% { transform: translate(0,0);        opacity: .35 } 33%      { transform: translate(18px,32px);   opacity: .95 } 66% { transform: translate(-32px,10px); opacity: .45 } }
+ @keyframes star10 { 0%,100% { transform: translate(0,0);        opacity: .9  } 50%      { transform: translate(14px,-30px);  opacity: .3  } }
+ @keyframes star11 { 0%,100% { transform: translate(0,0);        opacity: .2  } 50%      { transform: translate(-42px,-16px); opacity: .9  } }
+ @keyframes star12 { 0%,100% { transform: translate(0,0);        opacity: .75 } 33%      { transform: translate(24px,-36px);  opacity: .25 } 66% { transform: translate(-20px,-12px); opacity: .95 } }
+ @keyframes star13 { 0%,100% { transform: translate(0,0);        opacity: .3  } 50%      { transform: translate(34px,26px);   opacity: .85 } }
+ @keyframes star14 { 0%,100% { transform: translate(0,0);        opacity: .8  } 50%      { transform: translate(-26px,-34px); opacity: .15 } }
+ @keyframes star15 { 0%,100% { transform: translate(0,0);        opacity: .25 } 33%      { transform: translate(-16px,28px);  opacity: 1   } 66% { transform: translate(28px,-18px);  opacity: .5 } }
+ @keyframes star16 { 0%,100% { transform: translate(0,0);        opacity: .9  } 50%      { transform: translate(20px,40px);   opacity: .2  } }
+ @keyframes star17 { 0%,100% { transform: translate(0,0);        opacity: .35 } 50%      { transform: translate(-38px,12px);  opacity: .9  } }
+ @keyframes star18 { 0%,100% { transform: translate(0,0);        opacity: .2  } 33%      { transform: translate(-24px,-30px); opacity: .85 } 66% { transform: translate(30px,-8px);   opacity: .4 } }
+ @keyframes star19 { 0%,100% { transform: translate(0,0);        opacity: .85 } 50%      { transform: translate(32px,-14px);  opacity: .25 } }
+ @keyframes star20 { 0%,100% { transform: translate(0,0);        opacity: .3  } 50%      { transform: translate(-28px,36px);  opacity: .95 } }

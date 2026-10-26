@@ -297,24 +297,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if (starsCanvas) {
         const sctx = starsCanvas.getContext('2d');
         const sdpr = Math.min(window.devicePixelRatio || 1, 2);
-        const STAR_COUNT = 80;                 // 星点数量
+        const STAR_COUNT = 20;                 // 星点数量
         let starParticles = [];
         let scw = 0, sch = 0;
 
-        // 粒子禁入区：网页正中 1/2 部分（宽、高各取中间一半）
-        function insideCenter(x, y) {
-            return x > scw * 0.25 && x < scw * 0.75 && y > sch * 0.25 && y < sch * 0.75;
-        }
+        // box1/box2 的左右边框在视口中的 x 坐标（两者同宽同位，每次重算以跟随缩放/居中）
+        function boxLeft() { return box1.getBoundingClientRect().left; }
+        function boxRight() { return box1.getBoundingClientRect().right; }
 
         function makeStar() {
-            let x, y;
-            do {                                    // 只在外圈区域生成
-                x = Math.random() * scw;
-                y = Math.random() * sch;
-            } while (insideCenter(x, y));
             return {
-                x: x,
-                y: y,
+                x: Math.random() * scw,
+                y: Math.random() * sch,
                 r: Math.random() * 8 + 3,                // 点半径
                 vx: (Math.random() - .5) * 0.25,           // 缓慢随机漂移
                 vy: (Math.random() - .5) * 0.25,
@@ -336,17 +330,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         (function starLoop() {
             sctx.clearRect(0, 0, scw, sch);
+            const bl = boxLeft(), br = boxRight();
             for (const p of starParticles) {
-                const prevX = p.x, prevY = p.y;
+                const prevX = p.x;
                 p.x += p.vx; p.y += p.vy;
-                if (p.x < -12) p.x = scw + 12; else if (p.x > scw + 12) p.x = -12;   // 出界从另一侧回来（含模糊余量）
+                // 横向：右移穿过 box1/box2 左边框往右 12px → 出现在右边框往左 11px；左移反之
+                //（按“本帧是否跨过界线”触发，避免传送后原地反复触发）
+                if (p.vx > 0 && prevX < bl + 12 && p.x >= bl + 12) p.x = br - 11;
+                else if (p.vx < 0 && prevX > br - 12 && p.x <= br - 12) p.x = bl + 11;
+                // 出视口边缘则从另一侧回来（含模糊余量）
+                if (p.x < -12) p.x = scw + 12; else if (p.x > scw + 12) p.x = -12;
                 if (p.y < -12) p.y = sch + 12; else if (p.y > sch + 12) p.y = -12;
-                // 漂进正中 1/2 禁入区则退回并按进入方向反弹
-                if (insideCenter(p.x, p.y)) {
-                    if (prevX <= scw * 0.25 || prevX >= scw * 0.75) p.vx = -p.vx;
-                    if (prevY <= sch * 0.25 || prevY >= sch * 0.75) p.vy = -p.vy;
-                    p.x = prevX; p.y = prevY;
-                }
                 p.tw += p.twSpeed;
                 sctx.globalAlpha = Math.max(0, 0.55 + 0.45 * Math.sin(p.tw));   // 明暗闪烁
                 sctx.fillStyle = '#fff';

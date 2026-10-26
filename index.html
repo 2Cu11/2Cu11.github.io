@@ -1,530 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>个人网页</title>
-    <style>
-         html, body{
-            border-radius: 90px;
-            margin:0;
-            height:100%;
-            overflow:auto;
-            background-color: pink;
-            scroll-behavior: smooth;
-         }
-        .content{
-            position: relative;     
-            /* background-color: aquamarine; */
-          
-        }
-        #title{
-            width: 350px;
-            border-radius: 30px;
-            position: relative;
-            background-color: aquamarine;
-            font-family: kaiti;
-            padding: 40px;
-            top: -270px;
-            left: 450px;
-            
-        }
-         .name{
-           background-color: #fc1707;
-            position: relative;
-            height: 250px;
-            width:0px ;
-            top: -200px;
-            left: -150px;
-            background-size: 100% 100%;
-        } 
-        .box1{
-            border-radius: 90px;
-            display:flex;
-            position: fixed; 
-            left:0;
-            top:0;
-            width: 1670px;
-            height: 1169px;
-            transform-origin: top left;
-            visibility: hidden;
-            background-color:aqua;
-            background-image:
-                url('./ui/select4.png');
-                background-size:100% 100%;
-            z-index: 1;
-            will-change: transform;
-        }
-        .box2 {
-            border-radius: 90px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 1670px;              /* 与脚本里的 W 保持一致 */
-            height: 4000px;             /* 与脚本里的 H2 保持一致 */
-            transform-origin: top left;
-            visibility: hidden;         
-            overflow: hidden;
-            z-index: 2;                 /* 盖在 box1 上面 */
-            background: #c1d4e8;        /* 必须不透明，否则会透出 box1 */
-        }
-
-        .b2-layer { position: absolute; will-change: transform; }
-
-        /* 慢速背景层：做得比 box2 高，移动时才不会露边 */
-        .b2-back {
-            left: 0;
-            top: -900px;
-            width: 100%;
-            height: 2969px;
-            background: repeating-linear-gradient(
-                180deg, rgba(255,255,255,.06) 0 80px, transparent 80px 160px);
-        /* 换成自己的图：background: url('./ui/xxx.png') center / cover; */
-        }
-
-        /* 前景层：移动比滚动更快 */
-        .b2-front {
-            left: 200px;
-            top: 450px;
-            color: #fff;
-            font-size: 80px;
-        }
-
-
-        /* 定位层：铺满背景图，四扇门按背景图中的坐标摆放 */
-        .doors {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 1670px;
-            height: 1169px;
-         }
-        .door {
-           position: absolute;   /* 按背景图坐标定位 */
-           display: flex;
-           flex-direction: column;
-           align-items: center;
-           padding: 0;
-           border: 0;
-           background: none;
-           cursor: pointer;
-           font: inherit;
-           color: inherit;
-           -webkit-tap-highlight-color: transparent;
-         }
-
-         /* 四扇门在背景图中的位置/大小 */
-         .door[data-channel="trunk"] { left: 150px;  top: 340px;   width: AUTO;  height: 490px; }
-         .door[data-channel="aqua"]  { left: 443px;  top: 340px;   width: auto;  height: 490px; }
-         .door[data-channel="cons"]  { left: 740px;  top: 340px;   width: auto;  height: 490px; }
-         .door[data-channel="your"]  { left: 1250px; top: 320px;   width: auto;  height: 500px; }
-
-         /* 落地投影 */
-         .door__shadow {
-           position: absolute;
-           left: 50%;
-           bottom: 34px;
-           width: 92%;
-           height: 20px;
-           transform: translateX(-50%);
-           border-radius: 50%;
-           background: radial-gradient(closest-side, rgba(58, 42, 30, .40), rgba(58, 42, 30, 0) 78%);
-           filter: blur(3px);
-           transition: transform .32s cubic-bezier(.2, .8, .3, 1), opacity .32s ease;
-         }
-
-         .door__art {
-           display: block;
-           position: relative;
-           transform-origin: bottom center;
-            width: 100%;
-            height: 100%;
-           transition: transform .32s cubic-bezier(.2, .8, .3, 1), filter .32s ease;
-           filter: drop-shadow(0 6px 10px rgba(58, 42, 30, .18));
-           will-change: transform;
-         }
-
-         .door__label {
-           display: grid;
-           place-items: end center;
-           height: 30px;
-           margin-top: 10px;
-           font-family: 'Mamelon', 'MyricaM', serif;
-            font-size: 20px;
-           letter-spacing: .09em;
-           color: rgba(74, 59, 48, .78);
-           text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
-           transition: color .28s ease, transform .28s ease;
-           white-space: nowrap;
-         }
-
-         /* 悬停 / 键盘聚焦：门轻微抬起、变亮，投影收窄 */
-         .door:hover .door__art,
-         .door:focus-visible .door__art {
-           transform: translateY(-14px) scale(1.02);
-           filter: brightness(1.08) saturate(1.04)
-          drop-shadow(0 20px 22px rgba(58, 42, 30, .26));
-         }
-
-         .door:hover .door__shadow,
-         .door:focus-visible .door__shadow {
-           transform: translateX(-50%) scale(.82);
-           opacity: .72;
-         }
-
-         .door:hover .door__label,
-         .door:focus-visible .door__label {
-           color: var(--ink);
-           transform: translateY(-2px);
-         }
-
-         .door:focus-visible {
-           outline: none;
-         }
-
-         .door:focus-visible .door__label {
-           text-decoration: underline;
-           text-decoration-color: var(--accent);
-           text-underline-offset: 5px;
-           text-decoration-thickness: 1.5px;
-         }
-
-         .door:active .door__art {
-           transform: translateY(-5px) scale(.995);
-         }
-
-        /* 悬停图片 */
-         .door__hover {
-            position: absolute;
-            left: 50%;
-            bottom: calc(100% + 14px);     
-            transform: translateX(-50%) translateY(8px);
-            width: 240px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;           
-            transition: opacity .3s ease, transform .3s cubic-bezier(.2, .8, .3, 1), visibility .3s;
-            z-index: 20;
-         }
-
-         /* 悬停时显示（仅控制显隐，transform 由各门的位置规则接管）*/
-         .door:hover .door__hover,
-         .door:focus-visible .door__hover {
-            opacity: 1;
-            visibility: visible;
-         }
-
-         .door__hover-img {
-            display: block;
-            width: 100%;
-            height: auto;
-            border-radius: 50px;
-            left: 100px;
-            bottom: 100px;
-         }
-
-         /* 悬停文字 */
-         .door__caption {
-            position: absolute;
-            width: 250px;
-            font-family: 'Mamelon', 'MyricaM', serif;
-            font-size: 50px;
-            line-height: 1.6;
-            letter-spacing: .04em;
-            color: rgba(74, 59, 48, .88);
-            text-align: center;
-            white-space: pre-line;
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transition: opacity .3s ease, transform .3s cubic-bezier(.2, .8, .3, 1), visibility .3s;
-            transform: translateY(8px);
-            z-index: 30;
-            left: 280px; 
-            top: 80px;
-         }
-
-         /* 对应门悬停 / 聚焦时显示 */
-         .door[data-channel="trunk"]:hover ~ .door__caption[data-caption="trunk"],
-         .door[data-channel="trunk"]:focus-visible ~ .door__caption[data-caption="trunk"],
-         .door[data-channel="aqua"]:hover ~ .door__caption[data-caption="aqua"],
-         .door[data-channel="aqua"]:focus-visible ~ .door__caption[data-caption="aqua"],
-         .door[data-channel="cons"]:hover ~ .door__caption[data-caption="cons"],
-         .door[data-channel="cons"]:focus-visible ~ .door__caption[data-caption="cons"],
-         .door[data-channel="your"]:hover ~ .door__caption[data-caption="your"],
-         .door[data-channel="your"]:focus-visible ~ .door__caption[data-caption="your"] {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-         }
-
-         /* ===== 第四扇门：面板保持显示在门的上方 ===== */
-         .door[data-channel="your"]:hover .door__hover,
-         .door[data-channel="your"]:focus-visible .door__hover {
-            transform: translateX(-50%) translateY(0);
-         }
-         /* ===== 前三扇门：悬停面板居中显示在按钮内部 ===== */
-         .door[data-channel="trunk"] .door__hover,
-         .door[data-channel="aqua"] .door__hover,
-         .door[data-channel="cons"] .door__hover {
-            left: 50%;
-            top: 50%;
-            bottom: auto;
-            width: 88%;
-            transform: translate(-50%, -50%) scale(.96);
-         }
-
-         .door[data-channel="trunk"]:hover .door__hover,
-         .door[data-channel="aqua"]:hover .door__hover,
-         .door[data-channel="cons"]:hover .door__hover,
-         .door[data-channel="trunk"]:focus-visible .door__hover,
-         .door[data-channel="aqua"]:focus-visible .door__hover,
-         .door[data-channel="cons"]:focus-visible .door__hover {
-            transform: translate(-50%, -50%) scale(1);
-         }
-
-         /* ===== 第四扇门悬停时，同时触发前三扇门的悬停效果 ===== */
-         /* 需要支持 :has() 的浏览器（Chrome/Edge 105+、Safari 15.4+、Firefox 121+）*/
-         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="trunk"] .door__hover,
-         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="aqua"] .door__hover,
-         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="cons"] .door__hover {
-            opacity: 1;
-            visibility: visible;
-            transform: translate(-50%, -50%) scale(1);
-         }
-
-         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="trunk"] .door__art,
-         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="aqua"] .door__art,
-         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="cons"] .door__art {
-            transform: translateY(-14px) scale(1.02);
-            filter: brightness(1.08) saturate(1.04)
-           drop-shadow(0 20px 22px rgba(58, 42, 30, .26));
-         }
-
-         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="trunk"] .door__shadow,
-         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="aqua"] .door__shadow,
-         .doors:has(.door[data-channel="your"]:hover) .door[data-channel="cons"] .door__shadow {
-            transform: translateX(-50%) scale(.82);
-            opacity: .72;
-         }
-         #声明{
-            position: absolute;
-            color: rgb(3, 253, 253);
-            bottom: 10px;
-            left: 1000px;
-            font-style: oblique ;
-            
-         }
-
-    </style>
-   <script>
-
-    document.addEventListener('DOMContentLoaded', function () {
-        /* ===== 可调参数 ===== */
-        const W = 1670, H = 1169;   // 舞台尺寸
-        const INIT = 1;             // 初始大小系数
-        const SPEED1 = 0.5;         // box1 视差速度：0.5 = 以一半速度上移
-        const SMOOTH = 0.5;         // 目标：每次滚动约在 1 秒内平滑完成
-        // 由 SMOOTH 反推每 60fps 帧的缓动系数，使约 1 秒后剩余 ~2%（即基本到位）
-        let EASE = 1 - Math.pow(0.02, 1 / (SMOOTH * 60));   // ≈0.063，越小越柔
-
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) EASE = 1;
-
-    /* ===== 点击 #ID（YourRoom）门时的下滑动画：下滑至 box2 顶部与浏览器顶部距离为 0 ===== */
-    const AUTO_MS = 500;       // 动画时长(ms)：500 = 0.5 秒，可自行调整
-
-    const baseDpr = window.devicePixelRatio;
-    const box1 = document.querySelector('.box1');
-    const box2 = document.querySelector('.box2');
-    if (!box1) { console.error('找不到 .box1'); return; }
-    if (!box2) console.warn('找不到 .box2，目前只处理 box1');
-
-    const layers = box2 ? Array.from(box2.querySelectorAll('[data-speed]')) : [];
-    let s = 1, left = 0, top1 = 0, top2 = 0;
-    let current = window.scrollY;
-    let running = false;
-    let last = 0;               // 上一帧时间戳，用于帧率无关缓动
-    let refFrom = 0;            // 本次平滑滚动的起始动画位置
-    let gap = 0;                // 本次要移动的总距离（用于相对停止阈值）
-
-    /* ===== 点击 #ID（YourRoom）门的下滑动画状态（落点 = box2 顶部对齐浏览器顶部） ===== */
-    let autoScroll = false;            // 程序化滚动进行中
-    let autoStart = 0, autoFrom = 0;   // 起始时间戳 / 起始位置
-    let autoTo = 0;                    // 本次要滑到的目标滚动位置（点击时计算）
-    let prevScrollBehavior = '';       // 用于临时关闭/恢复 CSS 的 scroll-behavior
-
-    function easeInOutCubic(t) {
-        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    }
-
-    function layout() {
-        const vw = document.documentElement.clientWidth;
-        const vh = document.documentElement.clientHeight;
-        const zoom = window.devicePixelRatio / baseDpr;
-
-        s = Math.floor(Math.min(vw / W, vh / H) * INIT * zoom * 1000) / 1000;
-        left = Math.max(0, (vw - W * s) / 2);
-        top1 = 0;                            // box1 顶部始终贴住浏览器顶部（任意缩放都无间距）
-        top2 = top1 + H * s;                 // box2 顶部始终贴住 box1 底部（任意缩放都无间距）
-
-        // fixed 元素不占文档高度，用 body 高度撑出可滚动范围
-        document.body.style.height = (box2 ? top2 + H * s : vh + 1) + 'px';
-
-        box1.style.visibility = 'visible';
-        if (box2) box2.style.visibility = 'visible';
-        snap();
-    }
-
-    function render(y) {
-        const vh = document.documentElement.clientHeight;
-
-        // box1：向上移动 y * SPEED1（慢于滚动）
-        box1.style.transform =
-            'translate3d(' + left + 'px,' + (top1 - y * SPEED1) + 'px,0) scale(' + s + ')';
-
-        if (box2) {
-            // box2：以正常速度从下方上来
-            box2.style.transform =
-                'translate3d(' + left + 'px,' + (top2 - y) + 'px,0) scale(' + s + ')';
-
-            // box2 内部各层的视差
-            const p = y + vh - top2;
-            layers.forEach(function (el) {
-                const k = parseFloat(el.dataset.speed) || 0;
-                el.style.transform = 'translate3d(0,' + (p * k / s) + 'px,0)';
-            });
-        }
-    }
-
-    function loop(now) {
-        if (autoScroll) return;             // 程序化滚动接管期间，不再跑普通缓动
-        const target = window.scrollY;
-
-        // 帧率无关缓动：以 60fps 为基准换算，保证高刷屏同样顺滑
-        const dt = last ? Math.min(now - last, 100) : (1000 / 60); // 限制掉帧/切后台后的突跳
-        last = now;
-        const k = 1 - Math.pow(1 - EASE, dt / (1000 / 60));
-        current += (target - current) * k;
-
-        // 相对停止阈值：剩余距离小于“本次移动量”的 2%（至少 0.5px），
-        // 这样无论一次滚动多少像素，都能在约 SMOOTH 秒内平滑收敛，不会拖尾
-        const threshold = Math.max(0.5, gap * 0.02);
-        if (Math.abs(target - current) < threshold) {
-            current = target;
-            last = 0;
-            running = false;
-        } else {
-            requestAnimationFrame(loop);
-        }
-        render(current);
-    }
-
-    function kick() {
-        if (autoScroll) return;             // 程序化滚动期间，忽略由它自身触发的手动滚动逻辑
-        const t = window.scrollY;
-        if (!running) {
-            running = true;
-            last = 0;
-            refFrom = current;                 // 从当前动画位置开始计量
-            gap = Math.abs(t - current);       // 本次要移动的总距离
-            requestAnimationFrame(loop);
-        } else {
-            // 动画进行中又来新滚动：累计总距离，保证停止阈值始终合理
-            gap = Math.max(gap, Math.abs(t - refFrom));
-        }
-    }
-
-    function snap() {
-        current = window.scrollY;
-        render(current);
-    }
-
-    /* ===== 程序化滚动：下滑到 box2 顶部贴住浏览器顶部，时长 AUTO_MS，ease 缓动 ===== */
-    function maxScrollY() {
-        return Math.max(0,
-            document.documentElement.scrollHeight - document.documentElement.clientHeight);
-    }
-    // 想确认本页最多能滑多远（≈一屏高），取消下一行注释看控制台即可
-    // console.log('maxScrollY =', maxScrollY());
-
-    // 目标落点：box2 在视口中的位置 = top2 - 2 * 滚动值（它是绝对定位，同时又被 -滚动值 平移）
-    // 令该式为 0（box2 顶部贴住浏览器顶部）→ 滚动值 = top2 / 2，随缩放自适应
-    function autoTargetY() {
-        return top2 / 2;
-    }
-
-    function autoLoop(now) {
-        const t = Math.min(1, (now - autoStart) / AUTO_MS);
-        // 逐帧写入真实滚动位置，同时把同一数值交给 render，保证滚动条与视差完全同步
-        current = Math.min(autoFrom + easeInOutCubic(t) * (autoTo - autoFrom), maxScrollY());
-        window.scrollTo(0, current);        // 期间 CSS scroll-behavior 已临时置为 auto，故为瞬时定位
-        render(current);
-
-        if (t < 1) {
-            requestAnimationFrame(autoLoop);
-        } else {
-            // 收尾：停在精确落点，并把控制权交还给普通缓动
-            autoScroll = false;
-            running = false;
-            last = 0;
-            document.documentElement.style.scrollBehavior = prevScrollBehavior;
-            document.body.style.scrollBehavior = prevScrollBehavior;
-            render(current);
-        }
-    }
-
-    function startAutoScroll() {
-        if (autoScroll) return;             // 动画进行中，忽略重复点击
-        autoScroll = true;
-        running = false;                    // 停掉普通缓动循环
-        last = 0;
-        // 临时关闭 CSS 的 scroll-behavior:smooth，否则每帧 scrollTo 会被浏览器再次平滑化导致抖动
-        prevScrollBehavior = document.documentElement.style.scrollBehavior;
-        document.documentElement.style.scrollBehavior = 'auto';
-        document.body.style.scrollBehavior = 'auto';
-        autoFrom = current;                 // 从当前动画位置起步，衔接顺滑
-        autoTo = autoTargetY();             // 落点：box2 顶部与浏览器顶部距离为 0
-        autoStart = performance.now();
-        requestAnimationFrame(autoLoop);
-    }
-
-    function stopAutoScroll() {
-        if (!autoScroll) return;
-        autoScroll = false;
-        running = false;
-        last = 0;
-        document.documentElement.style.scrollBehavior = prevScrollBehavior;
-        document.body.style.scrollBehavior = prevScrollBehavior;
-    }
-
-    addEventListener('scroll', kick, { passive: true });
-    addEventListener('resize', layout);   // Ctrl+滚轮缩放也会触发
-    addEventListener('load', layout);
-
-    /* 点击 YourRoom 门（#ID）：向下 ease 滑动 1800px */
-    const idDoor = document.getElementById('ID');
-    if (idDoor) {
-        idDoor.addEventListener('click', function (e) {
-            e.preventDefault();
-            startAutoScroll();
-        });
-    }
-
-    /* 动画期间用户一滚轮就立刻打断，交回手动滚动接管 */
-    addEventListener('wheel', stopAutoScroll, { passive: true });
-    addEventListener('touchstart', stopAutoScroll, { passive: true });
-
-    layout();
-});
-</script>
+    <link rel="stylesheet" href="style.css">
+</head>
 <body>
+    <canvas id="stars"></canvas>
     <div class="box1">
         <nav class="doors" id="doors" aria-label="频道选择">
-             <a class="door"  href="/TrunkRoom.html" e="button" data-channel="trunk">
+             <a class="door" href="#" data-modal="trunk" data-channel="trunk">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_trunk.png" alt="" draggable="false">
                  <span class="door__hover">
@@ -532,7 +18,7 @@
                  </span>
              </a>
 
-              <a class="door" href="/AQUARIUM.html" type="button" data-channel="aqua">
+              <a class="door" href="#" data-modal="aqua" data-channel="aqua">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_aqua.png" alt="" draggable="false">
                  <span class="door__hover">
@@ -540,7 +26,7 @@
                  </span>
               </a>
 
-              <a class="door" href="/Consolation.html" type="button" data-channel="cons">
+              <a class="door" href="#" data-modal="cons" data-channel="cons">
                 <span class="door__shadow" aria-hidden="true"></span>
                 <img class="door__art" src="./ui/door_cons.png" alt="" draggable="false">
                  <span class="door__hover">
@@ -567,14 +53,17 @@
     <span id="声明">页面素材来自游戏“For the GHOSTs“</span>
     </div>
     <div class="box2">
-      <div class="b2-layer b2-back" data-speed="0.3"></div>
-      <div class="b2-layer b2-front" data-speed="-0.15">
+      <div class="b2-layer b2-back"></div>
+      <!-- 标题直接放在 box2 下，到 box2 顶部的距离固定 -->
+      <div id="title">个人简介</div>
+      <div class="b2-layer b2-front">
          <div class="content">
-            <div id="title">个人简介</div>
+            <div style="height:172px;"></div><!-- 占位：保持下方头像卡片位置不变 -->
             <div  class="name" style="border-radius:50px; width: 1000px;height: 1000px;background-color: #fafbfc;">
                 <span style="width:100px;height: 100px;">
-                    <img class="name" src="./ui/头像1.png" style="border-radius: 30px; top: 100px; left: 10px; width: 250px;height: 250px;"><br>
-                    <p class="name" style="color: black;top: 2px;left: 50px;">2Cu</p>
+                    <img class="name" id="avatar" src="./ui/sakana1.jpg" style="border-radius: 30px; top: 100px; left: 20px; width: 250px;height: 250px;"><br>
+                    <p class="n" style="">2Cu</p>
+                    <p class="n" style="color: black;top: 400px;left: 0px;width: 1000px;height: 50px;font-size: 50%;font-style: oblique;">Trying to be better</p>
                 </span>
 
             </div>
@@ -582,5 +71,30 @@
       </div>
    </div>
     
+    <div class="modal" id="modal" aria-hidden="true">
+        <div class="modal__backdrop" id="modalBackdrop" data-close></div>
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <button class="modal__close" id="modalClose" type="button" aria-label="关闭">×</button>
+
+            <div class="modal__head">
+                <img class="modal__resident" id="modalResident" alt="" hidden>
+                <div class="modal__titles">
+                    <h2 class="modal__title" id="modalTitle"></h2>
+                    <p class="modal__jp" id="modalJp"></p>
+                </div>
+            </div>
+
+            <div class="modal__body" id="modalBody"></div>
+            <p class="modal__enter" id="modalEnter"></p>
+        </div>
+    </div>
+
+    <!-- 点击头像放大 -->
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+        <div class="lightbox__backdrop" id="lightboxBackdrop"></div>
+        <img class="lightbox__img" id="lightboxImg" alt="">
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
